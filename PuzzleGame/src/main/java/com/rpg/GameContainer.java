@@ -19,8 +19,8 @@ public class GameContainer {
 
     Player player = new Player();
     ArrayList<Star> stars = new ArrayList<>();
-     ArrayList<Object> darkArmy = new ArrayList<>();
-    ArrayList<Object> weaponColl = new ArrayList<>();
+     ArrayList<DarkSoldier> darkArmy = new ArrayList<>();
+    ArrayList<Weapon> weaponColl = new ArrayList<>();
     private static GameContainer instance;
 
     private GameContainer() {
@@ -53,19 +53,19 @@ public class GameContainer {
         this.stars = stars;
     }
 
-    public ArrayList<Object> getDarkArmy() {
+    public ArrayList<DarkSoldier> getDarkArmy() {
         return darkArmy;
     }
 
-    public void setDarkArmy(ArrayList<Object> darkArmy) {
+    public void setDarkArmy(ArrayList<DarkSoldier> darkArmy) {
         this.darkArmy = darkArmy;
     }
 
-    public ArrayList<Object> getWeaponColl() {
+    public ArrayList<Weapon> getWeaponColl() {
         return weaponColl;
     }
 
-    public void setWeaponColl(ArrayList<Object> weaponColl) {
+    public void setWeaponColl(ArrayList<Weapon> weaponColl) {
         this.weaponColl = weaponColl;
     }
 

@@ -6,7 +6,7 @@ package com.rpg;
  */
 public class GameEntry {
 
-    static MoveStep move = new MoveStep();
+    static CommandProcessor move = new CommandProcessor();
     public static void main(String[] args) {
         GameContainer container = GameContainer.getInstance();
         container.initializeDarkCharacters();

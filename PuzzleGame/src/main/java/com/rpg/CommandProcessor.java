@@ -13,9 +13,9 @@ import java.util.Scanner;
 import static com.rpg.util.Constants.*;
 
 /**
- * {@link MoveStep} operational logic after each command from the player
+ * {@link CommandProcessor} operational logic after each command from the player
  */
-public class MoveStep {
+public class CommandProcessor {
 
     HelperUtil util = new HelperUtil();
     Scanner sc = new Scanner(System.in);
@@ -30,7 +30,7 @@ public class MoveStep {
         this.stateSaved = stateSaved;
     }
 
-    public MoveStep() {
+    public CommandProcessor() {
         // Fill Room information from text file
         container.getStars().add(new Star(0));
         List<String> roomInfo = null;
@@ -87,11 +87,11 @@ public class MoveStep {
     public void processCommand(String[] commands) {
         if (commands[0].equalsIgnoreCase(EXPLORE)) {
             explore(commands);
-        } else if (commands[0].equalsIgnoreCase(CREATE)) {
+        } /*else if (commands[0].equalsIgnoreCase(CREATE)) {
             createWeapon(commands);
         } else if (commands[0].equalsIgnoreCase(ACQUIRE)) {
             acquireWeapon(commands);
-        } else if (commands[0].equalsIgnoreCase(MOVE)) {
+        } */ else if (commands[0].equalsIgnoreCase(MOVE)) {
             move(commands);
         } else if (commands[0].equalsIgnoreCase(ATTACK)) {
             attack(commands);
@@ -250,7 +250,7 @@ public class MoveStep {
             }
         }
     }
-
+/*
     public void createWeapon(String[] commands) {
         if (commands.length == 1) {
             System.out.println("Mention the weapon name");
@@ -268,7 +268,7 @@ public class MoveStep {
             }
         }
     }
-
+*/
     public void explore(String[] commands) {
         Star currStar = container.getStars().get(container.getPlayer().roomNum);
         if (commands.length >= 2) {
