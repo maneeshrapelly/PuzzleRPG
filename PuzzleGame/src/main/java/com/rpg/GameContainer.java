@@ -12,13 +12,64 @@ import com.rpg.weapons.Weapon;
 
 import java.util.ArrayList;
 
+/**
+ * {@link GameContainer} container for all Game objects. i.e. players, stars and monsters .. etc
+ */
 public class GameContainer {
-    static Player player = new Player();
-    static ArrayList<Star> stars = new ArrayList<>();
-    static ArrayList<Object> darkArmy = new ArrayList<>();
-    static ArrayList<Object> weaponColl = new ArrayList<>();
 
-    public static void initializeDarkCharacters() {
+    Player player = new Player();
+    ArrayList<Star> stars = new ArrayList<>();
+     ArrayList<Object> darkArmy = new ArrayList<>();
+    ArrayList<Object> weaponColl = new ArrayList<>();
+    private static GameContainer instance;
+
+    private GameContainer() {
+    }
+
+    public static GameContainer getInstance() {
+        if (instance == null) {
+            synchronized (GameContainer.class) {
+                if (instance == null) {
+                    instance = new GameContainer();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public ArrayList<Star> getStars() {
+        return stars;
+    }
+
+    public void setStars(ArrayList<Star> stars) {
+        this.stars = stars;
+    }
+
+    public ArrayList<Object> getDarkArmy() {
+        return darkArmy;
+    }
+
+    public void setDarkArmy(ArrayList<Object> darkArmy) {
+        this.darkArmy = darkArmy;
+    }
+
+    public ArrayList<Object> getWeaponColl() {
+        return weaponColl;
+    }
+
+    public void setWeaponColl(ArrayList<Object> weaponColl) {
+        this.weaponColl = weaponColl;
+    }
+
+    public void initializeDarkCharacters() {
         darkArmy.add(new DarkSoldier());
         darkArmy.add(new DarthVader());
         darkArmy.add(new DarthMaul());
@@ -27,7 +78,7 @@ public class GameContainer {
         darkArmy.add(new Snoke());
     }
 
-    public static void initializeWeapons() {
+    public void initializeWeapons() {
         weaponColl.add(new Weapon());
         weaponColl.add(new LightSaber());
         weaponColl.add(new Blaster());

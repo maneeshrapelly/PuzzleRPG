@@ -1,24 +1,41 @@
 package com.rpg;
 
 import com.rpg.monsters.DarkSoldier;
-import com.rpg.util.CommonOps;
+import com.rpg.util.Constants;
+import com.rpg.util.HelperUtil;
 import com.rpg.weapons.Weapon;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
+import static com.rpg.util.Constants.*;
+
+/**
+ * {@link MoveStep} operational logic after each command from the player
+ */
 public class MoveStep {
 
-    CommonOps ops = new CommonOps();
+    HelperUtil util = new HelperUtil();
     Scanner sc = new Scanner(System.in);
+    GameContainer container = GameContainer.getInstance();
+    boolean stateSaved = false;
+
+    public boolean isStateSaved() {
+        return stateSaved;
+    }
+
+    public void setStateSaved(boolean stateSaved) {
+        this.stateSaved = stateSaved;
+    }
 
     public MoveStep() {
         // Fill Room information from text file
-        GameContainer.stars.add(new Star(0));
+        container.getStars().add(new Star(0));
         List<String> roomInfo = null;
         try {
-            roomInfo = ops.readLines("StarsInfo.txt");
+            roomInfo = util.readLines("StarsInfo.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -27,7 +44,7 @@ public class MoveStep {
             String words[] = line.split(":");
             if ("Number".equalsIgnoreCase(words[0])) {
                 newStar = new Star(Integer.parseInt(words[1].trim()));
-                GameContainer.stars.add(newStar);
+                container.getStars().add(newStar);
             } else if ("Name".equalsIgnoreCase(words[0])) {
                 newStar.setName(words[1].trim());
             } else if ("Desc".equalsIgnoreCase(words[0])) {
@@ -52,31 +69,34 @@ public class MoveStep {
     } */
 
     public void parseNextCommand() {
-        if (GameContainer.player.roomNum == 0) {
+        if (container.getPlayer().roomNum == 0) {
             // start game from scratch, i.e. create player character
             createPlayerChar();
         }
         System.out.println("Commands for Exploring: Explore(Explore surroundings) Explore Self" +
                 "(Self)");
         System.out.println("Commands for Moving: Move North, Move South, Move West, Move East");
-        System.out.println("Commands for Attack: Attack <soldier-name>");
+        System.out.println("Command for Attack: Attack <soldier-name>");
+        System.out.println("Command for Saving the game state: Save");
         //System.out.println("Move direction? N(up) E(right) W(left) S(down)");
         String input = sc.nextLine();
         String[] inputWords = input.split(" ");
-        processMoveCommand(inputWords);
+        processCommand(inputWords);
     }
 
-    public void processMoveCommand(String[] commands) {
-        if (commands[0].equalsIgnoreCase("explore")) {
+    public void processCommand(String[] commands) {
+        if (commands[0].equalsIgnoreCase(EXPLORE)) {
             explore(commands);
-        } else if (commands[0].equalsIgnoreCase("create")) {
+        } else if (commands[0].equalsIgnoreCase(CREATE)) {
             createWeapon(commands);
-        } else if (commands[0].equalsIgnoreCase("acquire")) {
+        } else if (commands[0].equalsIgnoreCase(ACQUIRE)) {
             acquireWeapon(commands);
-        } else if (commands[0].equalsIgnoreCase("move")) {
+        } else if (commands[0].equalsIgnoreCase(MOVE)) {
             move(commands);
-        } else if (commands[0].equalsIgnoreCase("attack")) {
+        } else if (commands[0].equalsIgnoreCase(ATTACK)) {
             attack(commands);
+        } else if (commands[0].equalsIgnoreCase(SAVE)) {
+            save(commands);
         } else {
             System.out.println("Invalid command");
         }
@@ -85,16 +105,41 @@ public class MoveStep {
 
 
     public void createPlayerChar() {
+        List<String> lines = null;
+        try {
+            String tempPath = System.getProperty("java.io.tmpdir");
+            lines = util.readStatusFile(tempPath + File.separator + PLAYER_STATE_TXT_FILE);
+            // write empty state to mark there is no state saved once read
+            util.writeGameState(PLAYER_STATE_TXT_FILE, "");
+        } catch (IOException e) {
+            // ignore exception
+            //System.out.println("No status file or failed to read it");
+        }
+        if (lines != null && lines.size() >= 3) {
+            for (String line : lines) {
+                String[] words = line.split(" ");
+                if (NAME.trim().equalsIgnoreCase(words[0])) {
+                    container.getPlayer().setName(words[1].trim());
+                } else if (POINTS.trim().equalsIgnoreCase(words[0])) {
+                    container.getPlayer().setHp(Integer.parseInt(words[1].trim()));
+                } else if (ROOM.trim().equalsIgnoreCase(words[0])) {
+                    container.getPlayer().setRoomNum(Integer.parseInt(words[1].trim()));
+                }
+            }
+            container.getPlayer().accuracy = 75;
+            System.out.println("Restored Player state");
+            return;
+        }
+
         System.out.println("Welcome to the Star's world. What do we call you");
         String name = sc.nextLine();
-        GameContainer.player.name = name;
-        System.out.println("Here comes " + name + " from planet Earth to become the emperor of " +
-                "galaxy");
+        container.getPlayer().name = name;
+        System.out.println("Here comes " + name + " from planet Earth to conquer the galaxy");
         System.out.println("Master Yoda gives you 100 hp and 75 accuracy to start. " +
                 "May the force be with you!");
-        GameContainer.player.hp = 100;
-        GameContainer.player.accuracy = 75;
-        GameContainer.player.roomNum = 1;
+        container.getPlayer().hp = 100;
+        container.getPlayer().accuracy = 75;
+        container.getPlayer().roomNum = 1;
     }
 
     public void attack(String[] commands) {
@@ -102,7 +147,7 @@ public class MoveStep {
             System.out.println("Attack whom?");
             return;
         }
-        Star currStar = GameContainer.stars.get(GameContainer.player.roomNum);
+        Star currStar = container.getStars().get(container.getPlayer().roomNum);
         boolean soldierFound = false;
         DarkSoldier currSoldier = null;
         for (DarkSoldier soldier : currStar.getSoldiers()) {
@@ -110,11 +155,12 @@ public class MoveStep {
                 soldierFound = true;
                 currSoldier = soldier;
                 while (soldier.getHp() > 0) {
-                    int playerpoints = CommonOps.generateRandom(GameContainer.player.getAccuracy());
-                    GameContainer.player.hp += playerpoints;
+                    int playerpoints =
+                            util.generateRandom(container.getPlayer().getAccuracy());
+                    container.getPlayer().hp += playerpoints;
                     soldier.setHp(soldier.getHp() - playerpoints);
-                    int monsterpoints = CommonOps.generateRandom(soldier.getAccuracy());
-                    GameContainer.player.hp -= monsterpoints;
+                    int monsterpoints = util.generateRandom(soldier.getAccuracy());
+                    container.getPlayer().hp -= monsterpoints;
                     soldier.setHp(soldier.getHp() + monsterpoints);
                     try {
                         Thread.sleep(2000);
@@ -122,9 +168,9 @@ public class MoveStep {
                         e.printStackTrace();
                     }
                     System.out.println("Your points:");
-                    explore(new String[]{"explore", "self"});
+                    explore(new String[]{Constants.EXPLORE, "self"});
                     System.out.println("Soldier points:");
-                    explore(new String[]{"explore", commands[1]});
+                    explore(new String[]{Constants.EXPLORE, commands[1]});
                     if (soldier.getHp() <= 0) {
                         System.out.println("You Defeated soldier");
                         /*GameContainer.player1.roomNum = Integer.parseInt(
@@ -152,8 +198,21 @@ public class MoveStep {
             elem = currStar.getSoldiers().remove(currSoldier);
         }
         String exit = currStar.getExits().get(0);
-        GameContainer.player.roomNum = Integer.parseInt(exit.split(" ")[1].trim());
+        container.getPlayer().roomNum = Integer.parseInt(exit.split(" ")[1].trim());
         explore(new String[]{"room"});
+    }
+
+    public void save(String[] commands) {
+        String text = NAME + container.getPlayer().getName() + "\n" +
+                POINTS + container.getPlayer().getHp() + "\n" +
+                ROOM + container.getPlayer().getRoomNum();
+        try {
+            util.writeGameState(PLAYER_STATE_TXT_FILE, text);
+            setStateSaved(true);
+        } catch (IOException e) {
+            System.out.println("Failed to save game state");
+            e.printStackTrace();
+        }
     }
 
 
@@ -162,12 +221,12 @@ public class MoveStep {
             System.out.println("Move where?");
             return;
         }
-        Star currStar = GameContainer.stars.get(GameContainer.player.roomNum);
+        Star currStar = container.getStars().get(container.getPlayer().roomNum);
         boolean exitPresent = false;
         for (String exit : currStar.exits) {
             if (commands[1].equalsIgnoreCase(exit.split(" ")[0])) {
                 exitPresent = true;
-                GameContainer.player.roomNum = Integer.parseInt(exit.split(" ")[1].trim());
+                container.getPlayer().roomNum = Integer.parseInt(exit.split(" ")[1].trim());
                 explore(new String[]{"room"});
             }
         }
@@ -182,10 +241,10 @@ public class MoveStep {
             System.out.println("Mention the weapon name");
             return;
         }
-        Star currStar = GameContainer.stars.get(GameContainer.player.roomNum);
+        Star currStar = container.getStars().get(container.getPlayer().roomNum);
         for (Weapon weapon : currStar.getWeapons()) {
             if (commands[1].equalsIgnoreCase(weapon.getId())) {
-                GameContainer.player.weapons.add(weapon);
+                container.getPlayer().weapons.add(weapon);
                 currStar.weapons.remove(weapon);
                 System.out.println("Acquired weapon: " + commands[1] + " in room: " + currStar.getRoomNum());
             }
@@ -197,8 +256,8 @@ public class MoveStep {
             System.out.println("Mention the weapon name");
             return;
         }
-        Star currStar = GameContainer.stars.get(GameContainer.player.roomNum);
-        for (Object weapon : GameContainer.weaponColl) {
+        Star currStar = container.getStars().get(container.getPlayer().roomNum);
+        for (Object weapon : container.getWeaponColl()) {
             if (commands[1].equalsIgnoreCase(((Weapon) weapon).getId())) {
                 try {
                     currStar.weapons.add((Weapon) Class.forName(commands[1]).newInstance());
@@ -211,11 +270,11 @@ public class MoveStep {
     }
 
     public void explore(String[] commands) {
-        Star currStar = GameContainer.stars.get(GameContainer.player.roomNum);
+        Star currStar = container.getStars().get(container.getPlayer().roomNum);
         if (commands.length >= 2) {
             boolean foundMatch = false;
             if (commands[1].equalsIgnoreCase("self")) {
-                GameContainer.player.explore();
+                container.getPlayer().explore();
                 foundMatch = true;
             } else {
                 for (DarkSoldier soldier : currStar.soldiers) {
@@ -242,7 +301,7 @@ public class MoveStep {
         }
         System.out.println("Soldiers you have to fight:");
         for (DarkSoldier soldier : currStar.soldiers) {
-            System.out.println(soldier.getId() + " ; " + soldier.getDesc());
+            System.out.println(soldier.getId() + "(" + soldier.getDesc() + ")");
         }
         System.out.println("Weapons you hold:");
         for (Weapon weapon : currStar.weapons) {

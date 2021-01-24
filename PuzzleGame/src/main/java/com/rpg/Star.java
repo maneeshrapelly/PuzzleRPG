@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link Star} class has information about one planet in galaxy
+ * {@link Star} class representing a planet in galaxy
  */
 public class Star {
 

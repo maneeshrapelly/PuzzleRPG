@@ -5,6 +5,9 @@ import com.rpg.weapons.Weapon;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@link Player} class representing a Player
+ */
 public class Player {
 
     String name;

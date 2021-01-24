@@ -1,7 +1,7 @@
 package com.rpg;
 
 import com.rpg.monsters.DarkSoldier;
-import com.rpg.util.CommonOps;
+import com.rpg.util.HelperUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,20 +11,29 @@ import java.util.List;
  */
 public class MonsterResurrection {
 
-    CommonOps ops = new CommonOps();
+    HelperUtil util = new HelperUtil();
+    GameContainer container = GameContainer.getInstance();
     Thread resThread;
+    boolean stopThread = false;
     public MonsterResurrection() {
 
+    }
+
+    public boolean isStopThread() {
+        return stopThread;
+    }
+
+    public void setStopThread(boolean stopThread) {
+        this.stopThread = stopThread;
     }
 
     public void startThread() {
         resThread = new Thread(() -> {
             try {
-                while (true) {
+                while (!stopThread) {
                     resurrect();
                     Thread.sleep(10000);
                 }
-
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -44,13 +53,13 @@ public class MonsterResurrection {
     public void resurrect() {
         List<String> monsterInfo = null;
         try {
-            monsterInfo = ops.readLines("MonsterInfo.txt");
+            monsterInfo = util.readLines("MonsterInfo.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
         for (String line: monsterInfo) {
             String[] words = line.split(" ");
-            Star star = GameContainer.stars.get(Integer.parseInt(words[2]));
+            Star star = container.getStars().get(Integer.parseInt(words[2]));
             boolean alreadyPresent = false;
             for (DarkSoldier soldier: star.getSoldiers()) {
                 if (words[1].equalsIgnoreCase(soldier.getId())) {

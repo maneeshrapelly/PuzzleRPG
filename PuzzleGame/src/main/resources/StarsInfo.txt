@@ -1,26 +1,26 @@
 Number: 1
 Name: Planet Mustafar
-Desc: sample text1
-Desc: sample text2
+Desc: surface is a brownish-yellow color
+Desc: It takes 687 days to revolve around
 Exit: South 2
 Exit: North 3
 Number: 2
 Name: Planet Wobani
-Desc: sample text1
-Desc: sample text2
+Desc: rotates in 84 years
+Desc: size is 51,118 kilometers in diameter
 Exit: North 1
 Exit: East 3
 Exit: West 4
 Number: 3
 Name: Planet Geonosis
-Desc: sample text1
-Desc: sample text2
+Desc: size is 49,500 kilometers in diameter
+Desc: Rocky Surface
 Exit: South 1
 Exit: West 2
 Exit: East 4
 Number: 4
 Name: Planet Eadu
-Desc: sample text1
-Desc: sample text2
+Desc: Iron Core
+Desc: surrounded by a system of nine rings
 Exit: East 2
 Exit: West 3
